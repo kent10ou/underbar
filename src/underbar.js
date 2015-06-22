@@ -227,13 +227,24 @@
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
-  _.some = function(collection, iterator) {
+  _.some = function(collection, callback) {
     // TIP: There's a very clever way to re-use every() here.
-
+    collection = collection || _.identity
+    callback = callback || _.identity
+    return !(_.every(collection, function (element) {
+      return (!!(callback(element)) != true)
+    }))
   };
 
   //should fail by default for empty collection
-  //
+  //should pass for a collection of all truthy results
+  //should fail for a collection of all falsy results
+  //should pass for a collection of truthy and falsy results
+  //should pass for a set containing one truthy value that is a string
+  //fail for a set of no matching values
+  //should pass for a collection containing one matching value
+  //should work when no callback is provided
+
 
   /**
    * OBJECTS
@@ -253,14 +264,42 @@
   //   }, {
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
-  _.extend = function(obj) {
+  _.extend = function(obj) { 
+    _.each(arguments, function (value, props) {
+      _.each(value, function (value, props) {
+        obj[props] = value
+      })
+    })
+    return obj;
   };
+
+//returns the first arg
+//should extend an obj w/ the attributes of another
+//should override properties found on the destination
+//should not override properties not found in the source
+//should extend from multiple source objects
+//in the case of a conflict, it should use the last property's values when extending from multiple source objects
+
+
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each(arguments, function (value, props) {
+      _.each(value, function (value, props) {
+        if (obj[props] === undefined) {
+          obj[props] = value;
+        }
+      })
+    })
+    return obj;
   };
 
+//returns the first argument
+//should copy a property if that key is already set on the target
+//should not copy a property if that key is already set on the target
+//should not copy a property if that key is already set on the target, even if the value for that key is falsy
+//prefers the first value found when two objects are provided with properties at the same key
 
   /**
    * FUNCTIONS
@@ -302,7 +341,22 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var results = {};
+    var param = JSON.stringify(arguments)
+    return function (param) {
+      if (results[param]) {
+        return results[param]
+      } else {
+        return results[param] = func.apply(this, arguments)
+      }
+    }
   };
+
+//memoize should check to see if a function has already been called, if it has then it goes and pulls the results and return it to you
+//should produce the same result as the non-memoized version
+//should give different results from different arguments
+//should not run the memoized function twice for any given set of arguments
+
 
   // Delays a function for the given number of milliseconds, and then calls
   // it with the arguments supplied.
@@ -311,8 +365,15 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    setTimeout(function () {
+      func.apply(null, args)
+    }, wait)
   };
 
+//setTimeOut, call, apply, slice
+//should only execute the function after the specified wait time
+//should have successfully passed function arguments in 
 
   /**
    * ADVANCED COLLECTION OPERATIONS
@@ -325,6 +386,18 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var newArr = array.slice(0, array.length);
+    _.each(array, function(val, index) {
+// create random index to place the value at
+      var randomIndex = Math.floor(Math.random() * array.length);
+// creating a temporary variable to store the value at the random index
+      var temp = newArr[randomIndex]; // 4
+// assigning the current value to the random index [1, 2, 3, 1, 5];
+      newArr[randomIndex] = val;
+// assign the temp variable to the current index to complete the swap
+      newArr[index] = temp
+    });
+  return newArr;
   };
 
 
